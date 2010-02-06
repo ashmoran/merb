@@ -215,7 +215,7 @@ class Merb::BootLoader::Logger < Merb::BootLoader
       end
     end
 
-    Merb::Config[:log_stream] = 
+    Merb::Config[:log_stream] =
       Merb::Config[:original_log_stream] || Merb.log_stream
     nil
   end
@@ -244,10 +244,10 @@ end
 # Setup some useful defaults
 class Merb::BootLoader::Defaults < Merb::BootLoader
   # Sets up the defaults
-  # 
+  #
   # ==== Returns
   # nil
-  # 
+  #
   # :api: plugin
   def self.run
     Merb::Request.http_method_overrides.concat([
@@ -342,10 +342,10 @@ class Merb::BootLoader::Dependencies < Merb::BootLoader
   # Array[Gem::Dependency]:: The dependencies registered in init.rb.
   #
   # As of Merb.1.1 these dependencies only get loaded when
-  # Merb::Config[:kernel_dependencies] is set to true. 
-  # 
+  # Merb::Config[:kernel_dependencies] is set to true.
+  #
   # This will be removed as of Merb 2.0
-  # 
+  #
   # :api: plugin
   # @deprecated
   cattr_accessor :dependencies
@@ -385,15 +385,15 @@ class Merb::BootLoader::Dependencies < Merb::BootLoader
     update_logger
     nil
   end
-  
+
   # Try to load the gem environment file (set via Merb::Config[:gemenv])
   # defaults to ./gems/environment
   #
-  # Load each the dependencies defined in the Merb::Config[:gemfile] 
+  # Load each the dependencies defined in the Merb::Config[:gemfile]
   # using the bundler gem's Bundler::require_env
-  # 
+  #
   # Falls back to rubygems if no bundler environment exists
-  # 
+  #
   # ==== Returns
   # nil
   #
@@ -421,7 +421,9 @@ class Merb::BootLoader::Dependencies < Merb::BootLoader
       if Merb::Config[:gemfile]
         require "bundler"
         Merb.logger.debug!("Loading Gemfile from #{Merb::Config[:gemfile]}") if Merb.verbose_logging?
-        if Bundler::Bundle.respond_to?(:load)
+        if Bundler.respond_to?(:load) # Bundler 0.9
+          Bundler.load(Merb::Config[:gemfile]).require(:default, Merb.environment)
+        elsif Bundler::Bundle.respond_to?(:load)
           Bundler::Bundle.load(Merb::Config[:gemfile]).environment.require_env(Merb.environment)
         else
           Bundler::Dsl.load_gemfile(Merb::Config[:gemfile]).require_env(Merb.environment)
@@ -432,7 +434,7 @@ class Merb::BootLoader::Dependencies < Merb::BootLoader
     end
     nil
   end
-  
+
   # Requires json or json_pure.
   #
   # ==== Returns
@@ -463,7 +465,7 @@ class Merb::BootLoader::Dependencies < Merb::BootLoader
       log_file = Merb::Config[:log_file]
       raise "log file should be a string, got: #{log_file.inspect}" unless log_file.is_a?(String)
       STDOUT.puts "Logging to file at #{log_file}" unless Merb.testing?
-      
+
       # try to create log directory (if it doesnt exist)
       log_directory = File.dirname(log_file)
       FileUtils.mkdir_p(log_directory) unless File.exists?(log_directory)
@@ -487,7 +489,7 @@ class Merb::BootLoader::Dependencies < Merb::BootLoader
     unless RUBY_VERSION >= '1.9'
       $KCODE = 'UTF8' if $KCODE == 'NONE' || $KCODE.blank?
     end
-    
+
     nil
   end
 
@@ -850,9 +852,9 @@ class Merb::BootLoader::LoadClasses < Merb::BootLoader
     # ==== Returns
     # (Does not return.)
     #
-    # :api: private    
+    # :api: private
     def reap_workers(status = 0, sig = reap_workers_signal)
-      
+
       Merb.logger.info "Executed all before worker shutdown callbacks..."
       Merb::BootLoader.before_worker_shutdown_callbacks.each do |cb|
         begin
@@ -899,7 +901,7 @@ class Merb::BootLoader::LoadClasses < Merb::BootLoader
     # :api: private
     def load_file(file, reload = false)
       Merb.logger.verbose! "#{reload ? "re" : ""}loading #{file}"
-      
+
       # If we're going to be reloading via constant remove,
       # keep track of what constants were loaded and what files
       # have been added, so that the constants can be removed
@@ -908,7 +910,7 @@ class Merb::BootLoader::LoadClasses < Merb::BootLoader
         if FILES_LOADED[file]
           FILES_LOADED[file].each {|lf| $LOADED_FEATURES.delete(lf)}
         end
-        
+
         klasses = ObjectSpace.classes.dup
         files_loaded = $LOADED_FEATURES.dup
       end
@@ -1271,10 +1273,10 @@ class Merb::BootLoader::SetupSession < Merb::BootLoader
 
     # Mixin the Merb::Session module to add app-level functionality to sessions
     overrides = (Merb::Session.instance_methods & Merb::SessionContainer.instance_methods)
-    overrides.each do |m| 
+    overrides.each do |m|
       Merb.logger.warn!("Warning: Merb::Session##{m} overrides existing " \
                         "Merb::SessionContainer##{m}")
-    end    
+    end
     Merb::SessionContainer.send(:include, Merb::Session)
     nil
   end
